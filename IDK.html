@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            background-color: #fff0f3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        #hint {
+            color: #ff4d6d;
+            font-size: 1.2rem;
+            font-weight: bold;
+            position: absolute;
+            top: 8%;
+            text-align: center;
+            animation: pulse 1.5s infinite;
+            z-index: 100;
+        }
+
+        #garden {
+            position: relative;
+            width: 100vw;
+            height: 85vh;
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .flower {
+            position: absolute;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .flower-head {
+            position: relative;
+            z-index: 10;
+            /* Head stays still when clicked now */
+        }
+
+        .plant-base {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            margin-top: -5px; /* Pulls head and stem together to close gaps */
+        }
+
+        .stem {
+            width: 6px;
+            background: linear-gradient(to top, #1b4332, #2d6a4f);
+            border-radius: 5px;
+            animation: growStem 1s ease-out;
+        }
+
+        /* Anchored Leaves */
+        .leaf-svg {
+            position: absolute;
+            bottom: 0;
+            pointer-events: none;
+        }
+
+        .leaf-path {
+            fill: #2d6a4f;
+            transform-origin: bottom center;
+            animation: growLeaf 1.2s ease-out forwards;
+        }
+
+        /* Message Bubble */
+        .secret-pop {
+            position: absolute;
+            bottom: 150%;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #c9184a;
+            white-space: nowrap;
+            box-shadow: 0 10px 25px rgba(255, 77, 109, 0.2);
+            border: 1px solid #ffccd5;
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 200;
+        }
+
+        @keyframes growStem { from { height: 0; } }
+        @keyframes growLeaf { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+        
+        /* Bloom Animation - Tighter overlaps */
+        .petal-left { animation: bloomLeft 0.8s ease-out 0.4s forwards; transform-origin: 50% 90%; }
+        .petal-right { animation: bloomRight 0.8s ease-out 0.4s forwards; transform-origin: 50% 90%; }
+        
+        @keyframes bloomLeft { to { transform: rotate(-12deg) translateX(-3px); } }
+        @keyframes bloomRight { to { transform: rotate(12deg) translateX(3px); } }
+
+        @keyframes popIn {
+            from { opacity: 0; transform: translateY(10px) scale(0.5); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    </style>
+</head>
+<body onclick="addFlower(event)">
+
+    <div id="hint">Tap anywhere to grow a tulip... <br><small>ukuk ❤️</small></div>
+    <div id="garden"></div>
+
+    <script>
+        let flowerCount = 0;
+        const colors = ['#ff4d6d', '#ff758f', '#ff8fa3', '#c9184a', '#fa3e5e'];
+        const secrets = [
+            "i want to kiss u so bad. i want to eat u so bad (be freaky gng).",
+            "Prettiest girl ever, MY QISHYYY ",
+            "You make me so happy ",
+            "My favorite princess ",
+            "I'm so lucky to have you",
+            "i love you my mommy"
+        ];
+
+        function addFlower(e) {
+            // Prevent planting too many or planting on top of an existing flower
+            if (e.target.closest('.flower') || flowerCount >= secrets.length) return;
+
+            const garden = document.getElementById('garden');
+            const flower = document.createElement('div');
+            flower.className = 'flower';
+            
+            const leftPos = Math.random() * 80 + 10;
+            const stemHeight = Math.random() * 60 + 200; // Taller stems
+            const color = colors[flowerCount % colors.length];
+            const msg = secrets[flowerCount];
+
+            flower.style.left = leftPos + '%';
+            flower.style.zIndex = Math.floor(stemHeight);
+
+            // Tighter SVG with overlapping petals and anchored leaves
+            flower.innerHTML = `
+                <div class="flower-head">
+                    <svg width="90" height="100" viewBox="0 0 100 110">
+                        <path d="M50 100 Q30 90 30 50 Q30 10 50 10 Q70 10 70 50 Q70 90 50 100" fill="${color}" />
+                        <path class="petal-left" d="M50 100 Q25 90 25 50 Q25 15 48 15 Q55 45 50 100" fill="${color}" stroke="rgba(0,0,0,0.05)" />
+                        <path class="petal-right" d="M50 100 Q75 90 75 50 Q75 15 52 15 Q45 45 50 100" fill="${color}" stroke="rgba(0,0,0,0.05)" />
+                    </svg>
+                </div>
+                <div class="plant-base">
+                    <div class="stem" style="height:${stemHeight}px"></div>
+                    <svg class="leaf-svg" width="120" height="${stemHeight}">
+                        <path class="leaf-path" d="M60 ${stemHeight} Q30 ${stemHeight-50} 10 ${stemHeight-140} Q35 ${stemHeight-80} 60 ${stemHeight-20}" />
+                        <path class="leaf-path" d="M60 ${stemHeight} Q90 ${stemHeight-60} 110 ${stemHeight-150} Q85 ${stemHeight-90} 60 ${stemHeight-30}" />
+                    </svg>
+                </div>
+            `;
+
+            flower.onclick = (event) => {
+                event.stopPropagation();
+                const old = flower.querySelector('.secret-pop');
+                if (old) { 
+                    old.remove(); 
+                    return; 
+                }
+                
+                const pop = document.createElement('div');
+                pop.className = 'secret-pop';
+                pop.innerText = msg;
+                flower.appendChild(pop);
+                
+                // Flower head now stays completely still as requested
+                setTimeout(() => { if(pop) pop.remove(); }, 3500);
+            };
+
+            garden.appendChild(flower);
+            flowerCount++;
+        }
+    </script>
+</body>
+</html>
